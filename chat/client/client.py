@@ -1,3 +1,4 @@
+
 import socket
 import threading
 import tkinter as tk
@@ -37,6 +38,9 @@ class ClientApp:
         self.chat_display = scrolledtext.ScrolledText(self.master, height=10)
         self.chat_display.pack(fill=tk.BOTH, padx=5, pady=5)
 
+        self.chat_group_display = scrolledtext.ScrolledText(self.master, height=10)
+        self.chat_group_display.pack(fill=tk.BOTH, padx=5, pady=5)
+
         self.message_entry = tk.Entry(self.master)
         self.message_entry.pack(fill=tk.X, padx=5)
         self.message_entry.bind("<Return>", lambda e: self.send_message())
@@ -73,11 +77,22 @@ class ClientApp:
         try:
             while self.connected:
                 data = self.sock.recv(65536)
+                print("data: ", data)
                 if not data:
                     break
                 msg = parse_message(data)
+                print("message: ", msg)
                 if msg["type"] == "message":
-                    self.chat_display.insert(tk.END, f"{msg['from']}: {msg['message']}\n")
+                    if msg["to"] == ["ALL"]:
+                        self.chat_group_display.insert(tk.END, f"{msg['from']}: {msg['message']}\n")
+                    else:
+                        self.chat_display.insert(tk.END, f"{msg['from']}: {msg['message']}\n")
+                        
+                    # if len(msg["to"]) == 1:
+                    #     self.chat_display.insert(tk.END, f"{msg['from']}: {msg['message']}\n")
+                    # else:
+                    #     self.chat_group_display.insert(tk.END, f"{msg['from']}: {msg['message']}\n")
+                    
                 elif msg["type"] == "file":
                     self.save_file(msg)
                 elif msg["type"] == "status":
@@ -93,7 +108,9 @@ class ClientApp:
 
     def get_selected_users(self):
         selected = self.users_list.curselection()
-        return [self.users_list.get(i) for i in selected] or ["ALL"]
+        if not selected:
+            return ["ALL"]
+        return [self.users_list.get(i) for i in selected]
 
     def send_message(self):
         text = self.message_entry.get()

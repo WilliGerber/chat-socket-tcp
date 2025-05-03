@@ -12,4 +12,3 @@ def create_message(msg_type, sender, to, message="", file_content=None):
 
 def parse_message(data):
     return json.loads(data.decode())
-

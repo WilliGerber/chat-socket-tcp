@@ -1,3 +1,4 @@
+
 import socket
 import threading
 import json
@@ -8,8 +9,9 @@ from common.protocol import create_message, parse_message
 HOST = '0.0.0.0'
 PORT = 10000
 clients = {}  # apelido: (socket, address)
-groups = {"ALL": []}
 log_file = "server_log.txt"
+groups = {"ALL": []}
+
 
 def log_action(ip_from, name_from, ip_to, name_to, action):
     timestamp = datetime.datetime.now().strftime('%d/%m/%Y; %H:%M')
@@ -17,39 +19,56 @@ def log_action(ip_from, name_from, ip_to, name_to, action):
         log.write(f"{timestamp}; {ip_from}; {name_from}; {ip_to}; {name_to}; {action}\n")
 
 def handle_client(client_socket, addr):
-    try:
+    # try:
         data = client_socket.recv(4096)
+        print ("DATA: ", data)
         user = parse_message(data)
         nickname = user["from"]
         clients[nickname] = (client_socket, addr)
+        if "ALL" not in groups:
+            groups["ALL"] = []
         groups["ALL"].append(nickname)
         log_action(addr[0], nickname, "TODOS", "TODOS", "login")
         broadcast_status()
 
         while True:
             data = client_socket.recv(65536)
+            print ("data: ", data)
             if not data:
+                print ("Chegou em break")
                 break
             msg = parse_message(data)
+            print("client: ", clients)
             if msg["type"] == "message":
+                print ("Chegou message")
+                if msg["to"] == ["ALL"]:
+                    msg["to"] = groups["ALL"]
+                if len(msg["to"]) == 1:
+                    clients[msg["from"]][0].send(data)
+                                   
                 for target in msg["to"]:
+                    print("client: ", clients)
                     if target in clients:
                         clients[target][0].send(data)
                 log_action(addr[0], msg["from"], ",".join([clients[t][1][0] for t in msg["to"]]), ",".join(msg["to"]), f"msg:{msg['message']}")
+            
+            
+            
             elif msg["type"] == "file":
                 for target in msg["to"]:
                     if target in clients:
                         clients[target][0].send(data)
                 log_action(addr[0], msg["from"], ",".join([clients[t][1][0] for t in msg["to"]]), ",".join(msg["to"]), f"arq:{msg['message']}")
-    except Exception as e:
-        print(f"Erro: {e}")
-    finally:
-        if nickname in clients:
-            del clients[nickname]
-            groups["ALL"].remove(nickname)
-            log_action(addr[0], nickname, "TODOS", "TODOS", "logoff")
-            broadcast_status()
-        client_socket.close()
+    # except Exception as e:
+    #     print ("Chegou em erro")
+    #     print(f"Erro: {e}")
+    # finally:
+    #     if nickname in clients:
+    #         del clients[nickname]
+    #         groups["ALL"].remove(nickname)
+    #         log_action(addr[0], nickname, "TODOS", "TODOS", "logoff")
+    #         broadcast_status()
+    #     client_socket.close()
 
 def broadcast_status():
     online_list = list(clients.keys())

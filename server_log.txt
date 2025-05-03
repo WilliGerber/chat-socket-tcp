@@ -1,7 +1,0 @@
-01/05/2025; 11:53; 127.0.0.1; willi; TODOS; TODOS; login
-01/05/2025; 11:54; 127.0.0.1; vini; TODOS; TODOS; login
-01/05/2025; 11:54; 127.0.0.1; vini; 127.0.0.1; willi; msg:oi
-01/05/2025; 11:54; 127.0.0.1; duda; TODOS; TODOS; login
-01/05/2025; 11:55; 127.0.0.1; duda; TODOS; TODOS; logoff
-01/05/2025; 11:55; 127.0.0.1; willi; TODOS; TODOS; logoff
-01/05/2025; 12:06; 127.0.0.1; vini; TODOS; TODOS; logoff
